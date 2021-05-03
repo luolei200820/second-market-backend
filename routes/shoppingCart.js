@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const verifyToken = require('../middleware/verifyToken')
+const Commodity = require('../model/commodity')
 const ShoppingCartItem = require('../model/shoppingCartItem')
 
 // 购物车商品列表
@@ -9,7 +10,10 @@ router.get('/list', verifyToken, async (req, res, next) => {
             where: {
                 userId: req.user.userId
             },
-            include: 'Commodity'
+            include: {
+                model: Commodity,
+                attributes: ['id', 'mainImg', 'title', 'price']
+            }
         })
         res.json({
             state: 1,
@@ -34,12 +38,13 @@ router.post('/add', verifyToken, async (req, res, next) => {
                 msg: '此商品已经添加到购物车了'
             })
         }
-        await ShoppingCartItem.create({
+        const shoppingCartItem = await ShoppingCartItem.create({
             userId: req.user.userId,
             commodityId: req.body.commodityId
         })
         res.json({
-            state: 1
+            state: 1,
+            shoppingCartItem
         })
     } catch (err) {
         next(err)

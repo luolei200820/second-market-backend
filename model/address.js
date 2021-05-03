@@ -18,9 +18,10 @@ const Address = sequelize.define('Address', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    postCode: {
-        type: DataTypes.STRING,
-        allowNull: false
+    default: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     timestamps: false

@@ -7,6 +7,7 @@ const Commodity = require('../model/commodity')
 const Category = require('../model/category')
 const User = require('../model/user')
 const Image = require('../model/image')
+const LeavingMessage = require('../model/leavingMessage')
 
 // 添加商品
 router.post('/add', verifyToken, upload.fields([
@@ -187,11 +188,12 @@ router.post('/search', async (req, res, next) => {
             },
             include: {
                 model: User,
-                attributes: ['username']
+                attributes: ['username', 'avatar']
             },
             attributes: { exclude: ['info', 'categoryId', 'userId'] }
         })
         res.json({
+            state: 1,
             commodities
         })
     } catch (err) {
@@ -205,11 +207,12 @@ router.get('/list', async (req, res, next) => {
         const commodities = await Commodity.findAll({
             include: {
                 model: User,
-                attributes: ['username']
+                attributes: ['username', 'avatar']
             },
             attributes: { exclude: ['info', 'categoryId', 'userId'] }
         })
         res.json({
+            state: 1,
             commodities
         })
     } catch (err) {
@@ -227,9 +230,26 @@ router.get('/category', async (req, res, next) => {
             },
             include: {
                 model: User,
-                attributes: ['username']
+                attributes: ['username', 'avatar']
             },
             attributes: { exclude: ['info', 'categoryId', 'userId'] }
+        })
+        res.json({
+            state: 1,
+            commodities
+        })
+    } catch (err) {
+        next(err)
+    }
+})
+
+// 查看用户发布的商品
+router.get('/user-upload', verifyToken, async (req, res, next) => {
+    try {
+        const commodities = await Commodity.findAll({
+            where: {
+                userId: req.user.userId
+            }
         })
         res.json({
             state: 1,
@@ -247,7 +267,7 @@ router.get('/:id', async (req, res, next) => {
             include: [
                 {
                     model: Image,
-                    attributes: ['filename']
+                    attributes: ['id', 'filename']
                 },
                 {
                     model: Category,
@@ -255,7 +275,15 @@ router.get('/:id', async (req, res, next) => {
                 },
                 {
                     model: User,
-                    attributes: ['username']
+                    attributes: ['username', 'avatar']
+                },
+                {
+                    model: LeavingMessage,
+                    include: {
+                        model: User,
+                        attributes: ['avatar', 'username']
+                    },
+                    limit: 2
                 }
             ]
         })

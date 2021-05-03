@@ -37,10 +37,6 @@ const Purchase = sequelize.define('Purchase', {
     addressDetail: {
         type: DataTypes.STRING,
         allowNull: false
-    },
-    addressPostCode: {
-        type: DataTypes.STRING,
-        allowNull: false
     }
 }, {
     timestamps: true,

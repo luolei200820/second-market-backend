@@ -32,6 +32,7 @@ app.use('/sale', require('./routes/sale'))
 app.use('/shoppingCart', require('./routes/shoppingCart'))
 app.use('/transaction', require('./routes/transaction'))
 app.use('/user', require('./routes/user'))
+app.use('/leavingMessage', require('./routes/leavingMessage'))
 
 // global error handler
 app.use((err, req, res, next) => {

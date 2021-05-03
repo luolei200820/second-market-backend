@@ -15,12 +15,14 @@ router.post('/login', async (req, res, next) => {
             },
             attributes: { exclude: 'password' }
         })
+        const shoppingCartItemList = await user.getShoppingCartItems()
         if (user) {
             const token = 'Bearer ' + signToken(user.id)
             res.json({
                 state: 1,
                 token,
-                user
+                user,
+                shoppingCartItemList
             })
         } else {
             res.json({
@@ -57,7 +59,8 @@ router.post('/regist', async (req, res, next) => {
         res.json({
             state: 1,
             token,
-            user
+            user,
+            shoppingCartItemList: []
         })
     } catch (err) {
         next(err)
@@ -70,10 +73,12 @@ router.post('/auto-login', verifyToken, async (req, res, next) => {
         const user = await User.findByPk(req.user.userId, {
             attributes: { exclude: 'password' }
         })
+        const shoppingCartItemList = await user.getShoppingCartItems()
         if (user) {
             res.json({
                 state: 1,
-                user
+                user,
+                shoppingCartItemList
             })
         } else {
             res.json({
@@ -87,7 +92,7 @@ router.post('/auto-login', verifyToken, async (req, res, next) => {
 })
 
 // 修改用户信息
-router.post('/edit', verifyToken, async (req, res, next) => {
+router.post('/edit', verifyToken, upload.single('avatar'), async (req, res, next) => {
     try {
         const user = await User.findByPk(req.user.userId)
         if (user) {
@@ -95,7 +100,7 @@ router.post('/edit', verifyToken, async (req, res, next) => {
             if (user.username !== req.body.username) {
                 // 检查用户名是否被注册
                 if (await User.findOne({
-                    username: req.body.username
+                    where: { username: req.body.username }
                 })) {
                     return res.json({
                         state: 0,
@@ -105,43 +110,21 @@ router.post('/edit', verifyToken, async (req, res, next) => {
                     user.username = req.body.username
                 }
             }
+            // 如果修改了头像
+            if (req.file) {
+                // 如果原来有头像
+                if (user.avatar) {
+                    deleteFile(user.avatar)
+                }
+                user.avatar = req.file.filename
+            }
             user.email = req.body.email
             user.phone = req.body.phone
             await user.save()
             res.json({
-                state: 1
+                state: 1,
+                user
             })
-        } else {
-            res.json({
-                state: 0,
-                msg: '没有找到此用户'
-            })
-        }
-    } catch (err) {
-        next(err)
-    }
-})
-
-// 修改头像
-router.post('/edit-avatar', verifyToken, upload.single('avatar'), async (req, res) => {
-    try {
-        const user = await User.findByPk(req.user.userId)
-        if (user) {
-            if (req.file) {
-                // 将之前的头像删除
-                if (user.avatar) deleteFile(user.avatar)
-                // 修改数据
-                user.avatar = req.file.filename
-                await user.save()
-                res.json({
-                    state: 1
-                })
-            } else {
-                res.json({
-                    state: 0,
-                    msg: '没有上传头像'
-                })
-            }
         } else {
             res.json({
                 state: 0,
